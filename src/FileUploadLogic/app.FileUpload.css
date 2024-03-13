@@ -1,0 +1,28 @@
+.file-box {
+    margin-top: 50px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    max-width: 400px;
+}
+
+button {
+    margin-left: 20px;
+}
+
+.picture , img{
+    size: 100px;
+    margin: 0 auto;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.file-box h2 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.file-box p {
+    font-size: 14px;
+    margin-bottom: 3px;
+}
