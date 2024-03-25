@@ -23,11 +23,20 @@ export class RegistrationComponent{
   });
 
 
-  onSubmit(): void {
-    this.http.post(this.URL+'register', this.registrationForm.value)
+  async onSubmit(): Promise<void> {
+    if(this.registrationForm.value.password == this.registrationForm.value.confirmPassword
+      && this.registrationForm.value.username != '' && this.registrationForm.value.password != '') {
+      this.http.post(this.URL+'register', this.registrationForm.value)
+        .subscribe(res => {
+          console.log(res);
+        });
+      this.router.navigate(['/login']);
+    } else {
+      console.log('Passwörter stimmen nicht überein oder Felder sind leer');
+    }
   }
 
   OnBackToLogin() {
-    this.router.navigate([ '/login']);
+    this.router.navigate(['/login']);
   }
 }

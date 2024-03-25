@@ -20,6 +20,8 @@ mongoose.connect('mongodb://localhost:27017/FileUploadingSystem', {useNewUrlPars
 const db = mongoose.connection;
 gfs = new mongoose.mongo.GridFSBucket(db, {bucketName: 'fileuploads'});
 
+const currentUserId = '';
+
 // Create a storage engine for Multer using GridFS
 const storage = new GridFsStorage({
   url: 'mongodb://localhost:27017/FileUploadingSystem',
@@ -30,7 +32,11 @@ const storage = new GridFsStorage({
     }
     return {
       filename: file.originalname,
-      bucketName: 'uploads'
+      bucketName: 'uploads',
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
     };
   }
 });
@@ -38,7 +44,7 @@ const storage = new GridFsStorage({
 const upload = multer({ storage: storage })
 
 //let upload = multer({ dest: 'uploads/' })
-app.post('/upload', upload.single('file'), (req, res, next) => {
+app.post('/upload', upload.single('file'), async (req, res, next) => {
   const file = req.file;
   console.log(file.filename);
   if (!file) {
@@ -49,17 +55,18 @@ app.post('/upload', upload.single('file'), (req, res, next) => {
     res.send(file);
 })
 
-// --- Multiple file upload (not implemented) ---
-app.post('/multipleuploads', upload.array('files'), (req, res, next) => {
-  const files = req.files;
-  console.log(files);
-  if (!files) {
-    const error = new Error('No File')
-    error.httpStatusCode = 400
-    return next(error)
+// Update the filename
+app.put('/file/:id', async (req, res) => {
+  try {
+    const fileId = req.params.id;
+    const newFilename = req.body.filename;
+    await FileUpload.findByIdAndUpdate(file => file._id === fileId, { filename: newFilename });
+    res.send('Filename updated');
   }
-    res.send({sttus:  'ok'});
-})
+  catch (error) {
+    res.status(500).send('Error updating filename');
+  }
+});
 
 // Get all files in the collection and return them as JSON objects
 app.get('/files', async (req, res) => {
@@ -84,30 +91,32 @@ app.delete('/file/:id', async (req, res) => {
   }
 });
 
-app.post('/register', async (req, res) => {
-  // Überprüfe ob der Benutzername bereits existiert
-  const existingUser = await User.findOne({ username: req.body.username });
+app.post('/register',  async (req, res) => {
+  try{
+    const username = req.body.username;
+    const password = req.body.password;
 
-  if (existingUser) {
-    return res.status(400).send('Benutzername ist bereits vergeben');
+    // Überprüfen ob der Benutzer bereits existiert
+    const user = await User.findOne({ username });
+
+    if (user) {
+      return res.status(400).json({ message: 'Benutzer existiert bereits' });
+    }
+
+    // Passwort verschlüsseln
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Benutzer erstellen
+    const newUser = new User({ username: username, password: hashedPassword});
+
+    var t =  await newUser.save();
+
+    currentUserId = t._id;
+
+    res.redirect('/login?message=Benutzer wurde erstellt');
   }
-
-  // Hashe das Passwort
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
-  // Erstellen einen neuen Benutzer
-  const user = new User({
-    username: req.body.username,
-    password: hashedPassword
-  });
-
-  // Speichern des Benutzer
-  try {
-    const savedUser = await user.save();
-    res.send(savedUser);
-  } catch (err) {
-    res.status(400).send(err);
+  catch (error) {
+    res.status(500).send('Error registering user');
   }
 });
 
@@ -117,7 +126,7 @@ app.post('/login', async (req, res) => {
   // Überprüfen ob der Benutzer existiert
   const user = await User.findOne({ username });
 
-  if (!user) {
+  if (user) {
     return res.status(400).json({ message: 'Benutzer existiert nicht' });
   }
 
@@ -127,6 +136,8 @@ app.post('/login', async (req, res) => {
   if (!passwordIsValid) {
     return res.status(400).json({ message: 'Ungültiges Passwort' });
   }
+
+  currentUserId = user._id;
 
   // Benutzer existiert und das Passwort ist gültig, leiten Sie den Benutzer zur Hauptseite weiter
   res.redirect('/main');

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -9,18 +10,25 @@ import { Router } from '@angular/router';
 })
 export class LoginComponent {
 
+  URL: string = 'http://localhost:3000/';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {}
 
   loginForm:FormGroup = new FormGroup({
     username: new FormControl('', [Validators.required]),
     password: new FormControl('',[Validators.required]),
   });
   
-  onSubmit(): void {
-  // TODO: Use EventEmitter with form value
-    console.log('onSubmit was called');
-    console.log(this.loginForm.value);
+  async onSubmit(): Promise<void> {
+    if( this.loginForm.value.username != '' && this.loginForm.value.password != '') {
+      this.http.post(this.URL+'login', this.loginForm.value)
+        .subscribe(res => {
+          console.log(res);
+        });
+      this.router.navigate(['/main']);
+    } else {
+      console.log('Incorrect Username or Passwört');
+    }
   }
 
   OnRegistation(){
