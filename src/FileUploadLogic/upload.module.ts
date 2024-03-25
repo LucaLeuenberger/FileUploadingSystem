@@ -3,11 +3,13 @@ import { UploadComponent } from './FileUpload.component';
 import { HttpClientModule } from '@angular/common/http'; 
 import { CommonModule } from '@angular/common';
 
+
 @NgModule({
   declarations: [
     UploadComponent,
   ],
   imports: [HttpClientModule, CommonModule],
-  exports: [UploadComponent] 
+  exports: [UploadComponent ], 
 })
-export class UploadModule { }
+export class UploadModule {
+ }

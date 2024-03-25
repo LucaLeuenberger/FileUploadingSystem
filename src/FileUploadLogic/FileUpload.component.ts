@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { ObjectId } from 'mongodb';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-load',
@@ -13,7 +14,11 @@ export class UploadComponent implements OnInit{
   files: any;
   URL: string = 'http://localhost:3000/';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private sanitizer: DomSanitizer) {}
+
+  getSafeHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
 
   onFileSelected(event: any) {
     this.selectedFile = <File>event.target.files[0];
@@ -31,6 +36,8 @@ export class UploadComponent implements OnInit{
     } else {
       console.log('Keine Datei ausgewählt');
     }
+
+    window.location.reload();
   }
 
   getFiles() {
@@ -44,6 +51,14 @@ export class UploadComponent implements OnInit{
       });
       this.files = files;
     })
+  }
+
+  deleteFile(fileId: ObjectId) {
+    this.http.delete(this.URL+`file/${fileId}`).subscribe(() => {
+      this.files = this.files.filter((file: { _id: ObjectId; }) => file._id !== fileId);
+    });
+
+    window.location.reload();
   }
 
   ngOnInit() {

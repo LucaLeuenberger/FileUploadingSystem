@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const GridFsStorage = require('multer-gridfs-storage').GridFsStorage;
 const FileUpload = require('./FileUpload.model');
 const cors = require('cors');
-const e = require('express');
+const bcrypt = require('bcrypt');
+const User = require('./User.model');
+const router = express.Router();
 
 // Create a new Express application
 const app = express();
@@ -62,7 +64,7 @@ app.post('/multipleuploads', upload.array('files'), (req, res, next) => {
 // Get all files in the collection and return them as JSON objects
 app.get('/files', async (req, res) => {
   try {
-    files = await FileUpload.find({});
+    const files = await FileUpload.find({});
     res.send(files);
   }
   catch (error) {
@@ -70,19 +72,64 @@ app.get('/files', async (req, res) => {
   }
 });
 
-// Get a file
-app.get('/file/:filename', async (req, res) => {
+app.delete('/file/:id', async (req, res) => {
   try {
-    const file = await FileUpload.findOne({filename: req.params.filename});
-    if (!file) {
-      return res.status(404).send('File not found');
-    } else {
-      return res.send(file);
-    }
+    const fileId = req.params.id;
+    await FileUpload.deleteOne({_id: fileId});
+    await FileChunk.deleteMany({fileId: fileId});
+    res.send('File deleted');
   }
   catch (error) {
     res.status(500).send('Error getting file');
   }
+});
+
+app.post('/register', async (req, res) => {
+  // Überprüfe ob der Benutzername bereits existiert
+  const existingUser = await User.findOne({ username: req.body.username });
+
+  if (existingUser) {
+    return res.status(400).send('Benutzername ist bereits vergeben');
+  }
+
+  // Hashe das Passwort
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+  // Erstellen einen neuen Benutzer
+  const user = new User({
+    username: req.body.username,
+    password: hashedPassword
+  });
+
+  // Speichern des Benutzer
+  try {
+    const savedUser = await user.save();
+    res.send(savedUser);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  // Überprüfen ob der Benutzer existiert
+  const user = await User.findOne({ username });
+
+  if (!user) {
+    return res.status(400).json({ message: 'Benutzer existiert nicht' });
+  }
+
+  // Überprüfen des Passwort
+  const passwordIsValid = await bcrypt.compare(password, user.password);
+
+  if (!passwordIsValid) {
+    return res.status(400).json({ message: 'Ungültiges Passwort' });
+  }
+
+  // Benutzer existiert und das Passwort ist gültig, leiten Sie den Benutzer zur Hauptseite weiter
+  res.redirect('/main');
 });
 
 // Start the server

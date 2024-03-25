@@ -1,0 +1,18 @@
+<div class="Login-container">
+  <div class="Header">
+    <h1>File Uploading System</h1>
+    <p>NoSQL M165 made by Tharun and Luca</p>
+  </div>
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <label>
+      Benutzername:
+      <input type="text" formControlName="username">
+    </label>
+    <label>
+      Passwort:
+      <input type="password" formControlName="password">
+    </label>
+    <button type="submit" >Anmelden</button>
+    <button type="button" (click)="OnRegistation()" >Registrieren</button>
+  </form>
+</div>

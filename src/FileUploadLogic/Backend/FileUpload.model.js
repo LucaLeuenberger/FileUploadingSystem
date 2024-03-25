@@ -1,7 +1,10 @@
-const { Binary, BSON } = require('mongodb');
 const mongoose = require('mongoose');
 
-const fileUploadSchema = mongoose.Schema({
+const fileUploadSchema = new mongoose.Schema({
+    _id:{
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
     filename: {
         type: String,
         required: true
