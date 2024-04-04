@@ -18,14 +18,24 @@
 
 
         <div class="file-box-container">
-                <div class="file-box" *ngFor="let file of files">
-                    <div class="file-box-border">
-                        <h2>{{ file.filename }}</h2>
-                        <p class="imgFile" [innerHTML]="file.image"> {{file.image}} </p>
+                <div  class="file-box" *ngFor="let file of files">
+                    <div #flieboxs class="file-box-border">
+                        <h2  [hidden]="upDateFile">{{ file.filename }}</h2>
+                        <input [hidden]="!upDateFile" [(ngModel)]="newfilename" type="text">
+                        <p  class="imgFile" [innerHTML]="file.image"> {{file.image}} </p>
                         <p>Content Type: {{ file.contentType }}</p>
                         <p>Upload Date: {{ file.uploadDate }}</p>
                         <button (click)="deleteFile(file._id)">
                         <img src="../assets/rubbish-bin.svg" style="height: 20px; width: 20px;"></button>
+                        <button (click)="updateFileChanges(file._id)" [hidden]="!upDateFile">
+                            <img src="../assets/check-solid.svg" style="height: 20px; width: 20px;"></button>
+                        <button (click)="updateFile(file)" [hidden]="!upDateFile">
+                                <img src="../assets/xmark-solid.svg" style="height: 20px; width: 20px;"></button>
+                        <button (click)="updateFile(file)" [hidden]="upDateFile && selectedFile !== file">
+                                <img src="../assets/pen-solid.svg" style="height: 20px; width: 20px;"></button>
+                        <button (click)="downloadFile(file._id, file.filename)" [hidden]="upDateFile && selectedFile !== file">
+                            <img src="../assets/download-solid.svg" style="height: 20px; width: 20px;"></button>
+                        
                     </div>
             </div>
         </div>

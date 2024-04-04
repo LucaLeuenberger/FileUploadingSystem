@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ObjectId } from 'mongodb';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -9,10 +9,14 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   templateUrl: './app.FileUpload.html',
 })
 export class UploadComponent implements OnInit{
+  @ViewChildren('flieboxs') fileboxs!: QueryList<ElementRef>;
   selectedFile: File | null = null;
   uploadedFiles: string[] = [];
+  upDateFile: boolean = false;
+  newfilename: string = '';
   files: any;
   URL: string = 'http://localhost:3000/';
+  
 
   constructor(private http: HttpClient, private sanitizer: DomSanitizer) {}
 
@@ -38,6 +42,51 @@ export class UploadComponent implements OnInit{
     }
 
     window.location.reload();
+  }
+
+  downloadFile(fileId: ObjectId, filename: string) {
+    this.http.get(this.URL+`download/${fileId}`, { responseType: 'blob' }).subscribe((res: any) => {
+      // download file from response
+      const url = window.URL.createObjectURL(res);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    });
+  }
+
+
+  updateFile(file: any) {
+    this.selectedFile = file;
+    this.newfilename = file.filename;
+    if (this.fileboxs) {
+      this.fileboxs.forEach((filebox: ElementRef) => {
+        if (filebox.nativeElement.children[0].innerText == file.filename) {
+          const children = filebox.nativeElement.children;
+
+          for (let i = 0; i < children.length; i++) {
+            if (children[i].localName != 'p'){
+            children[i].hidden = !children[i].hidden;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  updateFileChanges(fileId: ObjectId) {
+    try {
+      this.http.put(this.URL+`file/${fileId}`, { filename: this.newfilename })
+        .subscribe(res => {
+          console.log(res);
+        });
+        window.location.reload();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   getFiles() {

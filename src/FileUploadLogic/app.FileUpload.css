@@ -141,7 +141,7 @@ p {
     border-radius: 3px;
     margin-top: 50px;
     padding: 10px;
-    margin: 1px;
+    margin: 2px;
     min-width: 300px;
     max-width: 400px;
 }
@@ -158,7 +158,7 @@ p {
 }
 
 button {
-    margin-left: 20px;
+    margin-left: 10px;
 }
 
 .picture , img{
@@ -195,9 +195,17 @@ button {
 .file-box button {
     background-color: transparent;
     border: 0;
-    position: relative; 
-    margin-top: 5px;
-    right: -250px;
+    position: relative;
+    top: 10px;
+    right: -170px;
+}
+
+.file-box-border input{
+    position: relative;
+    width: 60%;
+    right: -60px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .file-upload-container button {

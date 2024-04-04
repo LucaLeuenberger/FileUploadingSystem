@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const fileChunkSchema = mongoose.Schema({
+const fileChunkSchema = new mongoose.Schema({
     fileId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

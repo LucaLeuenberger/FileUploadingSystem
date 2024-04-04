@@ -4,6 +4,7 @@ const multer = require('multer');
 const mongoose = require('mongoose');
 const GridFsStorage = require('multer-gridfs-storage').GridFsStorage;
 const FileUpload = require('./FileUpload.model');
+const FileChunk = require('./FileChunks.model');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const User = require('./User.model');
@@ -60,7 +61,7 @@ app.put('/file/:id', async (req, res) => {
   try {
     const fileId = req.params.id;
     const newFilename = req.body.filename;
-    await FileUpload.findByIdAndUpdate(file => file._id === fileId, { filename: newFilename });
+    await FileUpload.updateOne({ _id: fileId }, { filename: newFilename });
     res.send('Filename updated');
   }
   catch (error) {
@@ -79,11 +80,28 @@ app.get('/files', async (req, res) => {
   }
 });
 
+// Get a file by ID
+app.get('/file/:id', async (req, res) => {
+  try {
+    const fileId = req.params.id;
+    const file = await FileUpload.findById(fileId);
+    const chunks = await FileChunk.find({ files_id: fileId });
+    const data = chunks.map(chunk => chunk.data);
+    const buffer = Buffer.concat(data);
+    res.set('Content-Type', file.contentType);
+    res.send(buffer);
+  }
+  catch (error) {
+    res.status(500).send('Error getting file');
+  }
+});
+
+
 app.delete('/file/:id', async (req, res) => {
   try {
     const fileId = req.params.id;
     await FileUpload.deleteOne({_id: fileId});
-    await FileChunk.deleteMany({fileId: fileId});
+    await FileChunk.delete({files_id: fileId});
     res.send('File deleted');
   }
   catch (error) {
@@ -141,6 +159,24 @@ app.post('/login', async (req, res) => {
 
   // Benutzer existiert und das Passwort ist gültig, leiten Sie den Benutzer zur Hauptseite weiter
   res.redirect('/main');
+});
+
+
+app.get('/download/:id', async (req, res) => {
+// Download a file as blob
+  try {
+    const fileId = req.params.id;
+    const file = await FileUpload.findById(fileId);
+    const chunks = await FileChunk.find({ files_id: fileId });
+    const data = chunks.map(chunk => chunk.data);
+    const buffer = Buffer.concat(data);
+    res.set('Content-Type', file.contentType);
+    res.set('Content-Disposition', `attachment; filename=${file.filename}`);
+    res.send(buffer);
+  }
+  catch (error) {
+    res.status(500).send('Error downloading file');
+  }
 });
 
 // Start the server
