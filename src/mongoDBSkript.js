@@ -13,7 +13,7 @@ async function cerateDatabase(db) {
             validator: {
                 $jsonSchema: {
                     bsonType: 'object',
-                    required: ['filename', 'userId'],
+                    required: ['filename', 'userId', 'length', 'chunkSize', 'uploadDate', 'contentType'],
                     properties: {
                         length: {
                             bsonType: 'int',
